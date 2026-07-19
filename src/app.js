@@ -11,13 +11,19 @@ const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
-// CORS configuration - accept all origins for Vercel deployments
-app.use(
-  cors({
-    origin: "*",
-    credentials: false,
-  })
-);
+// CORS configuration - HARUS BEFORE semua route lain
+const corsOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
+// Handle OPTIONS explicitly
+app.options("*", cors(corsOptions));
 
 // Log all requests
 app.use((req, res, next) => {
