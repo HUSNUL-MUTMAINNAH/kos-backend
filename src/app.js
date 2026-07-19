@@ -11,27 +11,11 @@ const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
-// CORS configuration - accept localhost, vercel.app domains, and specific frontend URL
+// CORS configuration - accept all origins for Vercel deployments
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests from:
-      // 1. localhost (development)
-      // 2. Any *.vercel.app domain (Vercel deployments)
-      // 3. Specific FRONTEND_URL from env (production custom domain)
-      if (
-        !origin ||
-        origin.includes("localhost") ||
-        origin.includes("vercel.app") ||
-        origin === process.env.FRONTEND_URL
-      ) {
-        callback(null, true);
-      } else {
-        console.log("CORS blocked origin:", origin);
-        callback(new Error("CORS: Origin not allowed"));
-      }
-    },
-    credentials: true,
+    origin: "*",
+    credentials: false,
   })
 );
 
