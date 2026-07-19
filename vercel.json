@@ -1,15 +1,27 @@
 {
   "version": 2,
+  "buildCommand": "npm run prisma:generate && npm run build",
   "builds": [
     {
-      "src": "src/minimal.js",
-      "use": "@vercel/node"
+      "src": "src/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 60
+      }
     }
   ],
+  "env": {
+    "NODE_ENV": "production"
+  },
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "src/server.js",
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    },
+    {
       "src": "/(.*)",
-      "dest": "src/minimal.js"
+      "dest": "src/server.js"
     }
   ]
 }
