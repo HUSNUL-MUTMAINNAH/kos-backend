@@ -11,7 +11,7 @@ const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
-// CORS configuration - HARUS BEFORE semua route lain
+// CORS configuration
 const corsOptions = {
   origin: "*",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -20,23 +20,26 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
+// CORS middleware MUST be first
 app.use(cors(corsOptions));
 
-// Handle OPTIONS explicitly
-app.options("*", cors(corsOptions));
-
-// Log all requests
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  next();
+// Explicit OPTIONS handler for all routes
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "false");
+  res.sendStatus(200);
 });
+
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Folder statis untuk melayani file upload (bukti pembayaran, foto kamar, avatar)
+// Static files
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-// === DIAGNOSTIC ENDPOINTS ===
+// === HEALTH & DIAGNOSTIC ENDPOINTS ===
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Kos API berjalan dengan baik." });
 });
@@ -61,7 +64,6 @@ app.get("/api/diagnostics", (req, res) => {
   res.json(diagnostics);
 });
 
-// DEBUG endpoint - show all registered routes
 app.get("/api/debug/routes", (req, res) => {
   const routes = [];
   app._router.stack.forEach((middleware) => {
@@ -90,8 +92,7 @@ app.post("/api/test-register", (req, res) => {
   res.json({ received: req.body, timestamp: new Date().toISOString() });
 });
 
-// === END DIAGNOSTIC ===
-
+// === ROUTES ===
 console.log("🚀 Registering routes...");
 app.use("/api/auth", authRoutes);
 console.log("✅ Auth routes loaded");
@@ -112,7 +113,7 @@ app.use((req, res) => {
   res.status(404).json({ message: "Endpoint tidak ditemukan." });
 });
 
-// Error handler global (termasuk error dari multer)
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ message: err.message || "Terjadi kesalahan pada server." });
