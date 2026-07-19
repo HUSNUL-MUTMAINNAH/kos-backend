@@ -46,6 +46,7 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "envPlugin": false
 }
 
