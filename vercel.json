@@ -3,7 +3,7 @@
   "buildCommand": "npm run prisma:generate",
   "builds": [
     {
-      "src": "src/server.js",
+      "src": "src/minimal.js",
       "use": "@vercel/node",
       "config": {
         "maxDuration": 60,
