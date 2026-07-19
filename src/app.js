@@ -36,8 +36,29 @@ app.use(express.urlencoded({ extended: true }));
 // Folder statis untuk melayani file upload (bukti pembayaran, foto kamar, avatar)
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
+// === DIAGNOSTIC ENDPOINTS ===
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Kos API berjalan dengan baik." });
+});
+
+app.get("/api/diagnostics", (req, res) => {
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT || 5000,
+    database: {
+      url_set: !!process.env.DATABASE_URL,
+      url_preview: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'MISSING'
+    },
+    jwt: {
+      secret_set: !!process.env.JWT_SECRET
+    },
+    frontend: {
+      url: process.env.FRONTEND_URL || 'MISSING'
+    },
+    app_ready: true
+  };
+  res.json(diagnostics);
 });
 
 // DEBUG endpoint - show all registered routes
@@ -68,6 +89,8 @@ app.post("/api/test-register", (req, res) => {
   console.log("Body received:", req.body);
   res.json({ received: req.body, timestamp: new Date().toISOString() });
 });
+
+// === END DIAGNOSTIC ===
 
 console.log("🚀 Registering routes...");
 app.use("/api/auth", authRoutes);
