@@ -1,0 +1,141 @@
+// Schema database untuk aplikasi manajemen kos
+// Jalankan: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PENYEWA
+}
+
+enum StatusKamar {
+  KOSONG
+  TERISI
+}
+
+enum StatusPembayaran {
+  PENDING
+  APPROVED
+  REJECTED
+  BELUM_BAYAR
+}
+
+enum TipeNotifikasi {
+  REMINDER_3_HARI
+  JATUH_TEMPO
+  TERLAMBAT
+  PEMBAYARAN_DIACC
+  PEMBAYARAN_DITOLAK
+  PESAN_BARU
+  INFO
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  password     String
+  phone        String?
+  role         Role     @default(PENYEWA)
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  penyewa          Penyewa?
+  notifikasi       Notifikasi[]
+  pesanTerkirim    ChatMessage[] @relation("PesanTerkirim")
+  pesanDiterima    ChatMessage[] @relation("PesanDiterima")
+
+  @@map("users")
+}
+
+model Kamar {
+  id          String       @id @default(uuid())
+  nomorKamar  String       @unique @map("nomor_kamar")
+  tipe        String
+  harga       Decimal      @db.Decimal(12, 2)
+  fasilitas   String?
+  deskripsi   String?
+  fotoUrl     String?      @map("foto_url")
+  status      StatusKamar  @default(KOSONG)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  penyewa     Penyewa[]
+
+  @@map("kamar")
+}
+
+model Penyewa {
+  id             String    @id @default(uuid())
+  userId         String    @unique @map("user_id")
+  kamarId        String?   @map("kamar_id")
+  tanggalMasuk   DateTime  @map("tanggal_masuk")
+  tanggalKeluar  DateTime? @map("tanggal_keluar")
+  tanggalJatuhTempo Int    @default(1) @map("tanggal_jatuh_tempo") // tanggal berapa tiap bulan
+  aktif          Boolean   @default(true)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kamar          Kamar?      @relation(fields: [kamarId], references: [id])
+  pembayaran     Pembayaran[]
+
+  @@map("penyewa")
+}
+
+model Pembayaran {
+  id             String            @id @default(uuid())
+  penyewaId      String            @map("penyewa_id")
+  bulan          Int
+  tahun          Int
+  jumlah         Decimal           @db.Decimal(12, 2)
+  status         StatusPembayaran  @default(BELUM_BAYAR)
+  buktiUrl       String?           @map("bukti_url")
+  tanggalBayar   DateTime?         @map("tanggal_bayar")
+  tanggalReview  DateTime?         @map("tanggal_review")
+  catatanAdmin   String?           @map("catatan_admin")
+  inputManual    Boolean           @default(false) @map("input_manual")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  penyewa        Penyewa @relation(fields: [penyewaId], references: [id], onDelete: Cascade)
+
+  @@unique([penyewaId, bulan, tahun])
+  @@map("pembayaran")
+}
+
+model Notifikasi {
+  id        String         @id @default(uuid())
+  userId    String         @map("user_id")
+  judul     String
+  pesan     String
+  tipe      TipeNotifikasi @default(INFO)
+  dibaca    Boolean        @default(false)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifikasi")
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  senderId    String   @map("sender_id")
+  receiverId  String   @map("receiver_id")
+  pesan       String
+  dibaca      Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  sender      User @relation("PesanTerkirim", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User @relation("PesanDiterima", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
