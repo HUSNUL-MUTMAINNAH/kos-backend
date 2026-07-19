@@ -1,6 +1,6 @@
 {
   "name": "kos-backend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Backend API untuk aplikasi manajemen kos (admin & penyewa)",
   "main": "src/server.js",
   "scripts": {
