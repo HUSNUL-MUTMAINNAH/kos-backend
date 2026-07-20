@@ -15,22 +15,28 @@ const app = express();
 app.set("trust proxy", true);
 
 // CORS configuration
-// In development: allow localhost
-// In production: allow frontend URL from env
-const getAllowedOrigin = () => {
-  if (process.env.NODE_ENV === "production") {
-    return process.env.FRONTEND_URL || "https://kos-frontend-nana-all.vercel.app";
-  }
-  return "*"; // Allow all in development
-};
-
 const corsOptions = {
-  origin: getAllowedOrigin(),
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or Vercel deployments)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      "https://kos-frontend-nana-all.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      process.env.FRONTEND_URL
+    ];
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: false,
   optionsSuccessStatus: 200,
-  preflightContinue: false,
 };
 
 // CORS middleware MUST be first
