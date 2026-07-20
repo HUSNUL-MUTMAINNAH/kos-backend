@@ -21,7 +21,9 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.NODE_ENV === "production" 
+      ? (process.env.FRONTEND_URL || "https://kos-frontend-nana-all.vercel.app")
+      : "*",
     credentials: false,
   },
 });
@@ -32,5 +34,6 @@ setSocketIO(io); // supaya controller notifikasi & pembayaran bisa push realtime
 startCronJobs();
 
 server.listen(PORT, () => {
-  console.log(`✅ Server backend berjalan di http://localhost:${PORT}`);
+  const envLabel = process.env.NODE_ENV === "production" ? "Production" : "Development";
+  console.log(`✅ Server backend running (${envLabel} - PORT: ${PORT})`);
 });
