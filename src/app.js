@@ -14,39 +14,33 @@ const app = express();
 // Trust Vercel proxy
 app.set("trust proxy", true);
 
-// CORS configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Vercel deployments)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      "https://kos-frontend-nana-all.vercel.app",
-      "http://localhost:3000",
-      "http://localhost:3001",
-      process.env.FRONTEND_URL
-    ];
+// Manual CORS headers middleware - handle preflight before anything else
+app.use((req, res, next) => {
+  const frontendUrl = process.env.FRONTEND_URL || "https://kos-frontend-nana-all.vercel.app";
+  const origin = req.headers.origin;
+  
+  // Allow specific origins
+  const allowedOrigins = [
+    "https://kos-frontend-nana-all.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    frontendUrl
+  ];
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: false,
-  optionsSuccessStatus: 200,
-};
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin || frontendUrl);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Max-Age", "86400");
+  }
 
-// CORS middleware MUST be first
-app.use(cors(corsOptions));
+  // Handle preflight OPTIONS request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-// Handle preflight requests explicitly for all routes
-app.options("*", cors(corsOptions));
-
-// Additional preflight handler for specific /api/* routes
-app.options("/api/*", cors(corsOptions));
+  next();
+});
 
 // Body parsers
 app.use(express.json());
