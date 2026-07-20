@@ -11,6 +11,9 @@ const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
+// Trust Vercel proxy
+app.set("trust proxy", true);
+
 // CORS configuration
 // In development: allow localhost
 // In production: allow frontend URL from env
