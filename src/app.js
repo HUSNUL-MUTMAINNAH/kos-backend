@@ -14,25 +14,12 @@ const app = express();
 // Trust Vercel proxy
 app.set("trust proxy", true);
 
-// Manual CORS headers middleware - handle preflight before anything else
+// Simple CORS middleware - allow all origins for testing
 app.use((req, res, next) => {
-  const frontendUrl = process.env.FRONTEND_URL || "https://kos-frontend-nana-all.vercel.app";
-  const origin = req.headers.origin;
-  
-  // Allow specific origins
-  const allowedOrigins = [
-    "https://kos-frontend-nana-all.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    frontendUrl
-  ];
-
-  if (!origin || allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin || frontendUrl);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Max-Age", "86400");
-  }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
 
   // Handle preflight OPTIONS request
   if (req.method === "OPTIONS") {
