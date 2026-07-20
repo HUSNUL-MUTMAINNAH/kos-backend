@@ -12,25 +12,29 @@ const chatRoutes = require("./routes/chat.routes");
 const app = express();
 
 // CORS configuration
+// In development: allow localhost
+// In production: allow frontend URL from env
+const getAllowedOrigin = () => {
+  if (process.env.NODE_ENV === "production") {
+    return process.env.FRONTEND_URL || "https://kos-frontend-nana-all.vercel.app";
+  }
+  return "*"; // Allow all in development
+};
+
 const corsOptions = {
-  origin: "*",
+  origin: getAllowedOrigin(),
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: false,
   optionsSuccessStatus: 200,
+  preflightContinue: false,
 };
 
 // CORS middleware MUST be first
 app.use(cors(corsOptions));
 
-// Explicit OPTIONS handler for all routes
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "false");
-  res.sendStatus(200);
-});
+// Handle preflight requests explicitly
+app.options("*", cors(corsOptions));
 
 // Body parsers
 app.use(express.json());
